@@ -41,20 +41,29 @@ function! fold_surround#CustomFoldText() "  
     let display_line=getline(display_line_number)
     let ick_found=(-1!=match(display_line, g:fold_surround_title_discriminator))
     let [left_foldmarker, right_foldmarker] = split(&foldmarker, ',')
-    if !ick_found && match(display_line, '^\s*'.&foldmarker[0].'\s*') != -1
+    "   deal with the top line being displayable!
+    "   deal with the foldmarker being the end of the line
+    if !ick_found && match(display_line, '^\s*'.left_foldmarker) != -1
         return matchstr(foldtext(), "^.\\{-}:").matchlist(display_line, left_foldmarker.'\(.*\)')[1]
     endif
+    " 
+    "   deal with the foldmarker being the start of the line
+    if !ick_found && match(display_line, left_foldmarker.'\s*$') != -1
+        return matchstr(foldtext(), "^.\\{-}:")." ".matchlist(display_line, '\(.*\)'.left_foldmarker)[1]
+    endif
+    " 
+    " 
+    "   deal with the top line being bad
+    "   skip over the bad lines!
     while ick_found
         let display_line_number=display_line_number + 1
         let display_line=getline(display_line_number)
         let ick_found=(-1!=match(display_line, g:fold_surround_title_discriminator))
     endwhile
+    " 
+    "   display the first line that isn't skipped!
     return matchstr(foldtext(), "^.\\{-}:")." ".matchstr(display_line,"\\w.*")
-    "if ick_found
-    "    let return_value="ick: ".display_line
-    "else
-    "    let return_value="good: ".display_line
-    "endif
-    "return return_value
+    " 
+    " 
 endfunction
 " 
